@@ -20,19 +20,18 @@ import java.util.function.Consumer;
 
 import geography.GeographicPoint;
 import util.GraphLoader;
-import week2example.MazeNode;
 
 /**
  * @author UCSD MOOC development team and Veronika Benkeser
  * 
  * A class which represents a graph of geographic locations
- * Nodes in the graph are intersections between 
+ * Nodes in the graph are intersections 
  *
  */
 public class MapGraph {
 	//TODO: Add your member variables here in WEEK 2
 
-	private Map<GeographicPoint, Intersection> grid;
+	private Map<GeographicPoint, MapNode> grid;
 	private int numVerticies;
 	private int numEdges;
 	
@@ -43,7 +42,7 @@ public class MapGraph {
 	{
 		// TODO: Implement in this constructor in WEEK 2
 		
-		grid = new HashMap<GeographicPoint, Intersection>();
+		grid = new HashMap<GeographicPoint, MapNode>();
 		numVerticies=0;
 		numEdges=0;
 	}
@@ -79,7 +78,6 @@ public class MapGraph {
 	}
 
 	
-	
 	/** Add a node corresponding to an intersection at a Geographic Point
 	 * If the location is already in the graph or null, this method does 
 	 * not change the graph.
@@ -94,7 +92,7 @@ public class MapGraph {
 			return false;
 		}
 		
-		Intersection elem = new Intersection(location);
+		MapNode elem = new MapNode(location);
 		
 		grid.put(location, elem);
 		numVerticies++;
@@ -115,10 +113,21 @@ public class MapGraph {
 	 */
 	public void addEdge(GeographicPoint from, GeographicPoint to, String roadName,
 			String roadType, double length) throws IllegalArgumentException {
-	
 		
 		//TODO: Implement this method in WEEK 2
-		Intersection fromElem = grid.get(from);
+		if(!grid.containsKey(from) || !grid.containsKey(to)){
+			throw new IllegalArgumentException("The requested intersections have not been added to the graph.");
+		}
+		
+		if(roadType == null){
+			throw new IllegalArgumentException("Parameters cannot be null.");
+		}
+		
+		if(length<0){
+			throw new IllegalArgumentException("Length cannot be less than 0.");
+		}
+		
+		MapNode fromElem = grid.get(from);
 		fromElem.addNeighbor(grid.get(to), roadName, roadType,length);
 		
 		numEdges++;
@@ -144,7 +153,7 @@ public class MapGraph {
 	 * @param goal The goal location
 	 * @param nodeSearched A hook for visualization.  See assignment instructions for how to use it.
 	 * @return The list of intersections that form the shortest (unweighted)
-	 *   path from start to goal (including both start and goal).
+	 * path from start to goal (including both start and goal).
 	 */
 	public List<GeographicPoint> bfs(GeographicPoint start, 
 			 					     GeographicPoint goal, Consumer<GeographicPoint> nodeSearched)
@@ -155,9 +164,9 @@ public class MapGraph {
 			return null;
 		}
 		
-		Intersection startItem = grid.get(start);
-		Intersection endItem = grid.get(goal);
-		Map<Intersection,Intersection> parentMap = new HashMap<Intersection,Intersection>();
+		MapNode startItem = grid.get(start);
+		MapNode endItem = grid.get(goal);
+		Map<MapNode,MapNode> parentMap = new HashMap<MapNode,MapNode>();
 		
 		boolean found = bfsSuccessful(startItem,endItem,parentMap, nodeSearched);
 		if(!found){
@@ -166,29 +175,49 @@ public class MapGraph {
 		return constructPath(goal, parentMap);
 	}
 	
-	private List<GeographicPoint> constructPath (GeographicPoint goal, Map<Intersection,Intersection> parentMap){
+	/*
+	 * Construct a path from the starting node to the goal node.
+	 * @param goal  The location of the starting node
+	 * @param parentMap  The hashmap that maps each explored node to its 
+	 * most-recent parent
+	 * @return The list of nodes that form the shortest (unweighted)
+	 * path from start to goal (including both start and goal).
+	 */
+	private List<GeographicPoint> constructPath (GeographicPoint goal, Map<MapNode,MapNode> parentMap){
 	
 		LinkedList<GeographicPoint> path = new LinkedList<GeographicPoint>();
 		path.addFirst(goal);
-		Intersection item = grid.get(goal);
+		MapNode item = grid.get(goal);
 		
 		while(parentMap.containsKey(item)){
-			Intersection elem = parentMap.get(item);
+			MapNode elem = parentMap.get(item);
 			path.addFirst(elem.getLocation());
 			item = elem;
 		}
 		return path;
 	}
 	
-	private boolean bfsSuccessful(Intersection start, Intersection end,
-			Map<Intersection,Intersection> parentMap, Consumer<GeographicPoint> nodeSearched){
-		Queue<Intersection> q = new LinkedList<Intersection>();
-		Set<Intersection> visited = new HashSet<Intersection>();
+	/*
+	 * Explore the graph via BFS to see if there is path from the start node to 
+	 * the end node. Keep track of each node's parent by putting the node and its parent
+	 * into a HashMap.
+	 * 
+	 * @param start  The starting point of the BFS traversal
+	 * @param end  The goal we're trying to reach
+	 * @param parentMap  The mapping of the child node 
+	 * to the parent node (where the search came from)
+	 * @param nodeSearched  Consumer that will display the explored node
+	 * @return Return whether the node was found
+	 */
+	private boolean bfsSuccessful(MapNode start, MapNode end,
+			Map<MapNode,MapNode> parentMap, Consumer<GeographicPoint> nodeSearched){
+		Queue<MapNode> q = new LinkedList<MapNode>();
+		Set<MapNode> visited = new HashSet<MapNode>();
 		q.add(start);
 		visited.add(start);
 		
 		while(!q.isEmpty()){
-			Intersection elem = q.poll();
+			MapNode elem = q.poll();
 			
 			// Hook for visualization. 
 			nodeSearched.accept(elem.getLocation());
@@ -196,8 +225,8 @@ public class MapGraph {
 			if(elem.equals(end)){
 				return true;
 			}
-			for(Edge child: elem.getEdges()){
-				Intersection i = child.getIntersection();
+			for(MapEdge child: elem.getMapEdges()){
+				MapNode i = child.connectedTo();
 				if(!visited.contains(i)){
 					q.add(i);
 					visited.add(i);

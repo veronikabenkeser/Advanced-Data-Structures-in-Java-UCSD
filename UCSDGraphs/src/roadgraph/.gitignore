@@ -5,3 +5,6 @@
 /SearchGrader.class
 /Intersection.class
 /Edge.class
+/Street.class
+/MapNode.class
+/MapEdge.class
