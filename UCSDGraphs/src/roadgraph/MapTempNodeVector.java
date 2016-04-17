@@ -4,24 +4,31 @@ public class MapTempNodeVector implements Comparable<MapTempNodeVector> {
 	private MapNode startNode;
 	private MapNode endNode;
 	private double actualDistance;
-	private double predictedDistance;
+	private double totalDist;
+	private double lineDistance;
 	
 	public MapTempNodeVector(MapNode start, MapNode end){
 		this.startNode = start;
 		this.endNode = end;
 		this.actualDistance = Double.POSITIVE_INFINITY; 
-		this.predictedDistance = Double.POSITIVE_INFINITY; 
+		this.totalDist = Double.POSITIVE_INFINITY; 
+		this.lineDistance=0;
 	}
 	
-	private void setPredictedDistance(MapNode start, MapNode goal){
-		double predDist= getDistanceFromLatLonInMiles(start.getLocation().getY(),start.getLocation().getX(),
-									goal.getLocation().getY(),goal.getLocation().getX());
-		this.predictedDistance = predDist+this.actualDistance;
+	public void setEstimatedDistance(MapNode start, MapNode goal){
+//		this.lineDistance = getDistanceFromLatLonInMiles(start.getLocation().getY(),start.getLocation().getX(),
+//				goal.getLocation().getY(),goal.getLocation().getX());
+		this.lineDistance  = start.getLocation().distance(goal.getLocation());
+		updateTotalDistance();
 	}
 	
-	public void setActualDistance(double distance, MapNode start, MapNode goal){
+	private void updateTotalDistance(){
+		this.totalDist = this.lineDistance+this.actualDistance;
+	}
+	
+	public void setActualDistance(double distance){
+		
 		this.actualDistance = distance;
-		setPredictedDistance(start, goal);
 	}
 	
 	public void initializeActualDistance(){
@@ -29,16 +36,21 @@ public class MapTempNodeVector implements Comparable<MapTempNodeVector> {
 	}
 	
 	public void initializePredictedDistance(){
-		this.predictedDistance=0;
+		this.lineDistance=0;
 	}
 	
 	public MapNode getEndNode(){
 		return this.endNode;
 	}
 	
-	public double getPredictedDist(){
-		return this.predictedDistance;
+	public double getTotalDist(){
+		return this.totalDist;
 	}
+	
+	public double getActualDist(){
+		return this.actualDistance;
+	}
+	
 	public MapNode getStartNode(){
 		return this.startNode;
 	}
@@ -60,9 +72,9 @@ public class MapTempNodeVector implements Comparable<MapTempNodeVector> {
 		}
 	
 	public int compareTo(MapTempNodeVector node){
-		if(this.predictedDistance<node.predictedDistance){
+		if(this.totalDist<node.totalDist){
 			return -1;
-		} else if(this.predictedDistance>node.predictedDistance){
+		} else if(this.totalDist>node.totalDist){
 			return 1;
 		}
 		return 0;

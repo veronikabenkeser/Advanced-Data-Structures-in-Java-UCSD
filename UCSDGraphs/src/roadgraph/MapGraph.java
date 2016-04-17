@@ -271,14 +271,15 @@ public class MapGraph {
 		PriorityQueue<MapTempNode> pq = new PriorityQueue<MapTempNode>();
 		HashSet<MapNode> visited = new HashSet<MapNode>();
 		HashMap<MapNode,MapNode> parentMap = new HashMap<MapNode, MapNode>();
-		
+		int numRemovedNodes=0;
+
 		startNode.setDistance(0);
 		pq.add(startNode);
 		
 		
 		while(!pq.isEmpty()){
 			MapTempNode curr = pq.poll();
-			
+			numRemovedNodes++;
 			if(!visited.contains(curr.getEndNode())){
 				
 				visited.add(curr.getEndNode());
@@ -291,6 +292,7 @@ public class MapGraph {
 				}
 				
 				if (curr.getEndNode().getLocation().equals(goal)){
+					System.out.println("Number of removed nodes inside: dijkstra: "+numRemovedNodes);
 					return constructPath(goal,parentMap);
 				}
 				
@@ -305,6 +307,7 @@ public class MapGraph {
 				
 			}
 		}
+		System.out.println("Number of removed nodes inside: dijkstra: "+numRemovedNodes);
 		return new LinkedList<GeographicPoint>();
 }
 
@@ -337,7 +340,7 @@ public class MapGraph {
 		PriorityQueue<MapTempNodeVector> pq = new PriorityQueue<MapTempNodeVector>();
 		HashSet<MapNode> visited = new HashSet<MapNode>();
 		HashMap<MapNode,MapNode> parentMap = new HashMap<MapNode, MapNode>();
-		
+		int numRemovedNodes=0;
 		startNode.initializeActualDistance();
 		startNode.initializePredictedDistance();
 		
@@ -346,6 +349,7 @@ public class MapGraph {
 		
 		while(!pq.isEmpty()){
 			MapTempNodeVector curr = pq.poll();
+			numRemovedNodes++;
 			if(!visited.contains(curr.getEndNode())){
 				
 				// Hook for visualization.  See writeup.
@@ -358,30 +362,35 @@ public class MapGraph {
 				}
 				
 				if(curr.getEndNode().getLocation().equals(goal)){
+					System.out.println("Number of removed nodes inside: aStarSEarch: "+numRemovedNodes);
 					return constructPath(goal,parentMap);
 				}
 				
 				for(MapEdge child: curr.getEndNode().getMapEdges()){
 					if(!visited.contains(child)){
 						MapTempNodeVector nv = new MapTempNodeVector (child.getStartPoint(), child.getEndPoint());
-						nv.setActualDistance(child.getDistance()+curr.getPredictedDist(), child.getEndPoint(), grid.get(goal));
+						nv.setActualDistance(child.getDistance()+curr.getActualDist());
+						nv.setEstimatedDistance(child.getEndPoint(), grid.get(goal));
+						
 						pq.add(nv);
+						
 					}
 				}
 				
 			}
 	}
+		System.out.println("Number of removed nodes inside: aStarSEarch: "+numRemovedNodes);
 		return new LinkedList<GeographicPoint>();
 	}
 	
 	
 	public static void main(String[] args)
 	{
-		System.out.print("Making a new map...");
-		MapGraph theMap = new MapGraph();
-		System.out.print("DONE. \nLoading the map...");
-		GraphLoader.loadRoadMap("data/testdata/simpletest.map", theMap);
-		System.out.println("DONE.");
+//		System.out.print("Making a new map...");
+//		MapGraph theMap = new MapGraph();
+//		System.out.print("DONE. \nLoading the map...");
+//		GraphLoader.loadRoadMap("data/testdata/simpletest.map", theMap);
+//		System.out.println("DONE.");
 		
 		// You can use this method for testing.  
 		
@@ -399,6 +408,17 @@ public class MapGraph {
 		List<GeographicPoint> route2 = theMap.aStarSearch(start,end);
 
 		*/
+		
+		MapGraph theMap = new MapGraph();
+		System.out.print("DONE. \nLoading the map...");
+		GraphLoader.loadRoadMap("data/maps/utc.map", theMap);
+		System.out.println("DONE.");
+
+		GeographicPoint start = new GeographicPoint(32.8648772, -117.2254046);
+		GeographicPoint end = new GeographicPoint(32.8660691, -117.217393);
+
+		List<GeographicPoint> route = theMap.dijkstra(start,end);
+		List<GeographicPoint> route2 = theMap.aStarSearch(start,end);
 		
 	}
 	
