@@ -8,3 +8,5 @@
 /Street.class
 /MapNode.class
 /MapEdge.class
+/MapTempNode.class
+/MapTempNodeVector.class

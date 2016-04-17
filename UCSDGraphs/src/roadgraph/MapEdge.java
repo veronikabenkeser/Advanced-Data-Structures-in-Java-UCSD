@@ -9,6 +9,7 @@ public class MapEdge {
 	private String roadType;
 	private double length;
 	private MapNode endPoint;
+	private MapNode startPoint;
 	
 	/*
 	 * Constructor
@@ -18,19 +19,28 @@ public class MapEdge {
 	 * @param endPoint  The node this edge leads to
 	 */
 	public MapEdge(String roadName, 
-			String roadType, double length, MapNode endPoint){
+			String roadType, double length, MapNode startPoint, MapNode endPoint){
 		this.roadName= roadName;
 		this.roadType=roadType;
 		this.length=length;
 		this.endPoint = endPoint;
+		this.startPoint = startPoint;
 	}
 	
 	/*
 	 * Get the node this edge leads to
 	 * @return The node this edge leads to
 	 */
-	public MapNode connectedTo(){
+	public MapNode getEndPoint(){
 		return this.endPoint;
+	}
+	
+	public MapNode getStartPoint(){
+		return this.startPoint;
+	}
+	
+	public double getDistance(){
+		return this.length;
 	}
 }
 	

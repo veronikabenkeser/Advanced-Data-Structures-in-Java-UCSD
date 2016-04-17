@@ -10,10 +10,11 @@ import geography.GeographicPoint;
  * 
  */
 
-public class MapNode {
+public class MapNode{
 	private GeographicPoint location;
 	private int edgeCount;
 	private List<MapEdge> edges;
+//	private double distance;
 
 	/** 
 	 * MapNode constructor
@@ -24,6 +25,7 @@ public class MapNode {
 		this.location = location;
 		this.edgeCount=0;
 		this.edges = new ArrayList<MapEdge>();
+//		this.distance = Double.POSITIVE_INFINITY; 
 	}
 	
 	/*
@@ -35,10 +37,10 @@ public class MapNode {
 	 *  @param roadType  The road type of the connecting edge
 	 *  @param length  The length of the connecting edge
 	 */
-	public void addNeighbor(MapNode neighbor, String roadName, 
+	public void addNeighbor(MapNode start, MapNode end, String roadName, 
 							String roadType, double length)
 	{
-		edges.add(new MapEdge(roadName,roadType,length,neighbor));
+		edges.add(new MapEdge(roadName,roadType,length, start, end));
 		edgeCount++;
 	}
 	
@@ -68,5 +70,13 @@ public class MapNode {
 	public GeographicPoint getLocation(){
 		return this.location;
 	}
+	
+//	public void setDistance(double distance){
+//		this.distance = distance;
+//	}
+//
+//	public double getDistance(){
+//		return this.distance;
+//	}
 	
 }
