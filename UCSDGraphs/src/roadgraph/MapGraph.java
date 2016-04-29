@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,7 @@ public class MapGraph {
 	private Map<GeographicPoint, MapNode> grid;
 	private int numVerticies;
 	private int numEdges;
-	
+	private ArrayList<MapEdge> edges;
 	/** 
 	 * Create a new empty MapGraph 
 	 */
@@ -47,6 +48,7 @@ public class MapGraph {
 		grid = new HashMap<GeographicPoint, MapNode>();
 		numVerticies=0;
 		numEdges=0;
+		edges = new ArrayList<MapEdge>();
 	}
 	
 	/**
@@ -57,6 +59,10 @@ public class MapGraph {
 	{
 		//TODO: Implement this method in WEEK 2
 		return numVerticies;
+	}
+	
+	public ArrayList<MapEdge> getEdges(){
+		return this.edges;
 	}
 	
 	/**
@@ -133,6 +139,7 @@ public class MapGraph {
 		fromElem.addNeighbor(grid.get(from), grid.get(to), roadName, roadType,length);
 		
 		numEdges++;
+		edges.add(new MapEdge(roadName,roadType,length, grid.get(from), grid.get(to)));
 	}
 	
 
@@ -383,6 +390,113 @@ public class MapGraph {
 		return new LinkedList<GeographicPoint>();
 	}
 	
+	private MapEdge pickRandomFromStart(MapNode start){
+		return start.getMapEdges().get((int) (Math.random()*start.getMapEdges().size()));
+	}
+	private void removeNeighboringEdges(MapEdge startEdge, HashSet<MapEdge> edgesSet){
+		Iterator<MapEdge> iter = edgesSet.iterator();
+		ArrayList<MapEdge> edgesToRemove = new ArrayList<MapEdge>();
+		
+		while(iter.hasNext()){
+			MapEdge edge  = iter.next();
+			if(edge.getEndPoint().equals(startEdge.getEndPoint())||
+					edge.getEndPoint().equals(startEdge.getStartPoint())||
+					edge.getStartPoint().equals(startEdge.getEndPoint()) ||
+					edge.getStartPoint().equals(startEdge.getStartPoint())){
+					
+				edgesToRemove.add(edge);
+			}
+		}
+		
+		for(MapEdge e:edgesToRemove){
+			edgesSet.remove(e);
+		}
+	}
+	
+	public List<GeographicPoint> coverMinim(GeographicPoint start){
+		
+		HashSet<MapEdge> edgesSet = new HashSet<MapEdge>();
+		List<GeographicPoint> result = new ArrayList<GeographicPoint>();
+		
+		//Copy of all edges
+		for(MapEdge edge: this.getEdges()){
+			edgesSet.add(edge);
+		}
+		
+		MapNode startNode = grid.get(start);
+		MapEdge startEdge = pickRandomFromStart(startNode);
+		
+		result.add(startEdge.getStartPoint().getLocation());
+		result.add(startEdge.getEndPoint().getLocation());
+		edgesSet.remove(startEdge);
+		removeNeighboringEdges(startEdge, edgesSet);
+		
+		while(!edgesSet.isEmpty()){
+			//pick any edge
+			MapEdge edge = edgesSet.iterator().next();
+			result.add(edge.getStartPoint().getLocation());
+			result.add(edge.getEndPoint().getLocation());
+			//remove all edges that touch this edge's startpoint or endpoint from edgesSet 
+			removeNeighboringEdges(edge, edgesSet);
+		}
+		return result;
+	}
+		
+		public void greedy(GeographicPoint rootPoint){
+			double cost = 0;
+			MapNode root = grid.get(rootPoint);
+		
+			PriorityQueue<MapTempNode> pq = new PriorityQueue<MapTempNode>();
+			HashSet<MapNode> visited = new HashSet<MapNode>();
+			ArrayList<MapTempNode> vis = new ArrayList<MapTempNode>();
+			HashMap<MapTempNode, MapTempNode> hm = new HashMap<MapTempNode, MapTempNode >();
+			
+			MapTempNode node = new MapTempNode(root, root);
+			node.setDistance(0);
+			pq.add(node);
+			
+			for(MapNode n: grid.values()){
+				MapTempNode tNode = new MapTempNode(n,n);
+				pq.add(tNode);
+			}
+			
+			while(!pq.isEmpty()){
+				MapTempNode nodeN = pq.poll();
+				if(!visited.contains(nodeN.getEndNode())){
+					visited.add(nodeN.getStartNode());
+					vis.add(nodeN);
+					
+					double minDist = Double.POSITIVE_INFINITY;
+					MapNode minNode = null;
+					
+					for(MapEdge edge: nodeN.getStartNode().getMapEdges()){
+						if(!edge.getEndPoint().equals(nodeN.getParent())){
+							if(edge.getDistance()<minDist){
+								minDist = edge.getDistance();
+								minNode = edge.getEndPoint();
+							}
+						}
+					}
+					
+					if(minNode !=null){
+						MapTempNode newN = new MapTempNode(minNode,minNode); 
+						newN.setParent(nodeN.getStartNode());
+						newN.setDistance(minDist);
+						pq.add(newN);
+						hm.put(nodeN, newN);
+						cost+=minDist;
+					}
+				}
+			}
+			
+			hm.put(vis.get(vis.size()-1),node);
+			
+			MapTempNode key = node;
+			while(hm.containsKey(key)){
+				key = hm.get(key);
+			}
+			System.out.println("Cost:"+cost);
+		}
 	
 	public static void main(String[] args)
 	{
@@ -399,15 +513,14 @@ public class MapGraph {
 		System.out.print("DONE. \nLoading the map...");
 		GraphLoader.loadRoadMap("data/maps/utc.map", theMap);
 		System.out.println("DONE.");
-
-		GeographicPoint start = new GeographicPoint(32.8648772, -117.2254046);
-		GeographicPoint end = new GeographicPoint(32.8660691, -117.217393);
-		
-		
-		List<GeographicPoint> route = theMap.dijkstra(start,end);
-		List<GeographicPoint> route2 = theMap.aStarSearch(start,end);
-
 		*/
+		
+//		GeographicPoint start = new GeographicPoint(32.8648772, -117.2254046);
+//		GeographicPoint end = new GeographicPoint(32.8660691, -117.217393);
+//		
+//		List<GeographicPoint> route = theMap.dijkstra(start,end);
+//		List<GeographicPoint> route2 = theMap.aStarSearch(start,end);
+
 		
 		MapGraph theMap = new MapGraph();
 		System.out.print("DONE. \nLoading the map...");
